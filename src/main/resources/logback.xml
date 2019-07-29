@@ -22,7 +22,7 @@
     </appender>
     <logger name="twitter4j" level="OFF"/>
     <logger name="com.optimaize.langdetect" level="OFF"/>
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="stdout"/>
         <appender-ref ref="squirrel"/>
     </root>
