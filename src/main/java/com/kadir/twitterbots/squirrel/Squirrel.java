@@ -3,7 +3,8 @@ package com.kadir.twitterbots.squirrel;
 import com.kadir.twitterbots.authentication.BotAuthenticator;
 import com.kadir.twitterbots.ratelimithandler.handler.RateLimitHandler;
 import com.kadir.twitterbots.ratelimithandler.process.ApiProcessType;
-import com.kadir.twitterbots.squirrel.util.SquirrelConstans;
+import com.kadir.twitterbots.squirrel.finder.UsernameMiner;
+import com.kadir.twitterbots.squirrel.util.SquirrelConstants;
 import twitter4j.*;
 
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import static com.kadir.twitterbots.squirrel.util.SquirrelConstans.*;
+import static com.kadir.twitterbots.squirrel.util.SquirrelConstants.LAST_USERNAME_BACKUP_FILE_PATH;
 
 /**
  * @author akadir
@@ -31,50 +32,50 @@ public class Squirrel {
 
     public Squirrel() {
         this.authenticate();
-
     }
 
     public void run() {
-        try {
-            this.tweetAvailableUsernames();
-        } catch (TwitterException e) {
-            logger.error("Error occurred", e);
-        }
+        this.tweetAvailableUsernames();
     }
 
     private void authenticate() {
-        twitter = BotAuthenticator.authenticate(SquirrelConstans.AUTH_PROPERTIES_FILE_NAME, "");
+        twitter = BotAuthenticator.authenticate(SquirrelConstants.AUTH_PROPERTIES_FILE_NAME, "");
     }
 
-    private void tweetAvailableUsernames() throws TwitterException {
+    private void tweetAvailableUsernames() {
         String name = getLastUsedUsername();
         logger.info("Found last used username as: " + name);
         int counter = 0;
+        boolean go = true;
 
-
-        while (true) {
+        while (go) {
             counter++;
-            name = findNextName(name);
+            name = UsernameMiner.findNextName(name);
             logger.info("Check: " + name);
             try {
                 User u = twitter.showUser(name);
                 RateLimitHandler.handle(twitter.getId(), u.getRateLimitStatus(), ApiProcessType.SHOW_USER);
             } catch (TwitterException e) {
-                if (e.getErrorCode() == 50) {
-                    logger.info("Found: " + name);
-                    Status updatedStatus = twitter.updateStatus(name);
-                    logger.info("Status updated to: " + updatedStatus.getText());
-                    RateLimitHandler.handle(twitter.getId(), updatedStatus.getRateLimitStatus(), ApiProcessType.UPDATE_STATUS);
-
-                } else if (e.getErrorCode() != 63) {
-                    logger.error("TwitterError", e);
-                    break;
-                }
-
-                if ((counter % 100) == 0) {
-                    saveUsername(name);
+                try {
+                    if (e.getErrorCode() == 50) {
+                        logger.info("Found: " + name);
+                        Status updatedStatus = twitter.updateStatus(name);
+                        logger.info("Status updated to: " + updatedStatus.getText());
+                        RateLimitHandler.handle(twitter.getId(), updatedStatus.getRateLimitStatus(), ApiProcessType.UPDATE_STATUS);
+                    } else {
+                        logger.error("Error occurred for username: " + name, e);
+                        saveUsername(name);
+                    }
+                } catch (TwitterException ex) {
+                    if (ex.getErrorCode() == 185) {
+                        logger.error("Daily limit has been reached: ", ex);
+                        break;
+                    } else {
+                        logger.error("Error occurred: ", ex);
+                    }
                 }
             }
+            go = counter < Integer.MAX_VALUE;
         }
     }
 
@@ -90,38 +91,6 @@ public class Squirrel {
     }
 
 
-    private String findNextName(String name) {
-        if (name.equals("")) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < MIN_CHAR_COUNT; i++) {
-                sb.append(CHARACTER_LIST.charAt(0));
-            }
-
-            return sb.toString();
-        } else if (name.length() > MAX_CHAR_COUNT || name.length() < MIN_CHAR_COUNT) {
-            throw new IndexOutOfBoundsException("Twitter username character count must be between 5-15.");
-        } else {
-            return getNextName(name, name.length() - 1);
-        }
-    }
-
-    private String getNextName(String name, int pos) {
-        if (pos < 0) {
-            return name + CHARACTER_LIST.charAt(0);
-        } else {
-            int indexOfChar = CHARACTER_LIST.lastIndexOf(name.charAt(pos));
-            StringBuilder sb = new StringBuilder(name);
-            if (indexOfChar + 1 == CHARACTER_LIST.length()) {
-                sb.setCharAt(pos, CHARACTER_LIST.charAt(0));
-                return getNextName(sb.toString(), pos - 1);
-            } else {
-                sb.setCharAt(pos, CHARACTER_LIST.charAt(indexOfChar + 1));
-                return sb.toString();
-            }
-        }
-    }
-
-
     private String getLastUsedUsername() {
         String tweetedOne = findLastTweetedUsername();
         String savedOne = findLastSavedUserName();
@@ -133,23 +102,12 @@ public class Squirrel {
         } else if (savedOne == null) {
             return tweetedOne;
         } else {
-            if (tweetedOne.length() == savedOne.length()) {
-                for (int i = 0; i < tweetedOne.length(); i++) {
-                    if (tweetedOne.charAt(i) != savedOne.charAt(i)) {
-                        if (CHARACTER_LIST.indexOf(tweetedOne.charAt(i)) > CHARACTER_LIST.indexOf(savedOne.charAt(i))) {
-                            return tweetedOne;
-                        } else {
-                            return savedOne;
-                        }
-                    }
-                }
-                return tweetedOne;
+            int compare = tweetedOne.compareTo(savedOne);
+
+            if (compare < 0) {
+                return savedOne;
             } else {
-                if (tweetedOne.length() > savedOne.length()) {
-                    return tweetedOne;
-                } else {
-                    return savedOne;
-                }
+                return tweetedOne;
             }
         }
     }
@@ -166,7 +124,7 @@ public class Squirrel {
             }
 
         } catch (TwitterException e) {
-            logger.error("", e);
+            logger.error("Error occurred while getting last tweeted username: ", e);
         }
 
         return null;
@@ -180,7 +138,7 @@ public class Squirrel {
             try {
                 username = new String(Files.readAllBytes(path));
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                logger.error("Error occurred while getting last saved username from file", e);
             }
         }
         return username;

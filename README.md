@@ -2,6 +2,12 @@
 
 Finds available usernames.
 
-## TO-DO
+#### auth.properties
 
-add property file definitions
+```properties
+#Twitter API Auth keys and options
+consumer-key =
+consumer-secret =
+access-token = 
+access-token-secret =
+```
