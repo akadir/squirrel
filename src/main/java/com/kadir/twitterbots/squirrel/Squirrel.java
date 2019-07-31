@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+import static com.kadir.twitterbots.squirrel.util.SquirrelConstants.CHARACTER_LIST;
 import static com.kadir.twitterbots.squirrel.util.SquirrelConstants.LAST_USERNAME_BACKUP_FILE_PATH;
 
 /**
@@ -102,14 +103,30 @@ public class Squirrel {
         } else if (savedOne == null) {
             return tweetedOne;
         } else {
-            int compare = tweetedOne.compareTo(savedOne);
+            return compareStrings(tweetedOne, savedOne);
+        }
+    }
 
-            if (compare < 0) {
-                return savedOne;
-            } else {
+    private String compareStrings(String tweetedOne, String savedOne) {
+        if (tweetedOne.length() == savedOne.length()) {
+            for (int i = 0; i < tweetedOne.length(); i++) {
+                if (tweetedOne.charAt(i) != savedOne.charAt(i)) {
+                    if (CHARACTER_LIST.indexOf(tweetedOne.charAt(i)) > CHARACTER_LIST.indexOf(savedOne.charAt(i))) {
+                        return tweetedOne;
+                    } else {
+                        return savedOne;
+                    }
+                }
+            }
+            return tweetedOne;
+        } else {
+            if (tweetedOne.length() > savedOne.length()) {
                 return tweetedOne;
+            } else {
+                return savedOne;
             }
         }
+
     }
 
     private String findLastTweetedUsername() {
