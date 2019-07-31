@@ -1,6 +1,6 @@
 # Squirrel
 
-Finds available usernames.
+Finds and tweets available twitter  usernames.
 
 #### auth.properties
 
