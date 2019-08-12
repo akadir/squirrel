@@ -3,11 +3,7 @@ group 'com.kadir.twitterbots'
 apply plugin: 'java'
 
 sourceCompatibility = 1.8
-
-wrapper {
-  gradleVersion = '5.5.1'
-  distributionType = Wrapper.DistributionType.BIN
-}
+compileJava.options.encoding = 'UTF-8'
 
 repositories {
   mavenCentral()
@@ -19,6 +15,14 @@ jar {
             'Main-Class': 'com.kadir.twitterbots.squirrel.Squirrel'
     )
   }
+}
+
+task run(type: JavaExec) {
+  group = 'Run'
+  description = 'Tweet youtube subscriber count'
+
+  classpath sourceSets.main.runtimeClasspath
+  main = "com.kadir.twitterbots.squirrel.Squirrel"
 }
 
 dependencies {
