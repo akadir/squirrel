@@ -1,5 +1,6 @@
 # Squirrel
 
+[![Build Status](https://travis-ci.org/akadir/squirrel.svg?branch=master)](https://travis-ci.org/akadir/squirrel)
 [![gradle-version](https://img.shields.io/badge/gradle-5.5.1-brightgreen)](https://img.shields.io/badge/gradle-5.5.1-brightgreen)
 
 Finds and tweets available twitter usernames.
