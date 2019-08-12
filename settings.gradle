@@ -1,5 +1,4 @@
 rootProject.name = 'squirrel'
-//include(":bot-authenticator")
 
 sourceControl {
   gitRepository("https://github.com/akadir/bot-authenticator.git") {
@@ -10,11 +9,3 @@ sourceControl {
     producesModule("com.kadir.twitterbots.commons:rate-limit-handler")
   }
 }
-
-
-//include(":rate-limit-handler")
-//project(':bot-authenticator').projectDir = new File('../commons/bot-authenticator')
-//project(':rate-limit-handler').projectDir = new File('../commons/rate-limit-handler')
-
-
-
