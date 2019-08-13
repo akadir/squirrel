@@ -1,4 +1,4 @@
-# ![squirrel-icon](icon.png)<sup id="a1">[1](#icon-license)</sup> Squirrel
+# <img src="icon.png" width="64" height="64"><sup id="a1">[1](#icon-license)</sup> Squirrel
 
 [![Build Status](https://travis-ci.org/akadir/squirrel.svg?branch=master)](https://travis-ci.org/akadir/squirrel)
 [![gradle-version](https://img.shields.io/badge/gradle-5.5.1-brightgreen)](https://img.shields.io/badge/gradle-5.5.1-brightgreen)
